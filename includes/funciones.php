@@ -1,28 +1,31 @@
 <?php
 // Constantes de validacion
 define('MAX_ISBN',    13);
-define('MIN_TITULO',   5);
+define('MIN_TILE',   5);
 define('MIN_AUTOR',    3);
-define('MIN_PAGINAS',  1);
-define('MAX_PAGINAS', 5000);
-define('MIN_CANTIDAD', 1);
-define('ANHO_MIN',  1900);
-define('ANHO_MAX',  2024);
+define('MIN_PAGES',  1);
+define('MAX_PAGES', 5000);
+define('MIN_AMOUNT', 1);
+define('MIN_YEAR',  1900);
+define('MAX_YEAR',  2024);
 
 // Generos
-function obtenerGeneros(): array {
+function getGenres(): array
+{
     return ['Fantasia', 'Sci-Fi', 'Terror', 'Suspenso', 'Romance', 'Realismo Magico', 'Historia'];
 }
 
 // Sanitizar
-function sanitizar(string $dato): string {
-    return htmlspecialchars(trim($dato), ENT_QUOTES);
+function sanitizar(string $data): string
+{
+    return htmlspecialchars(trim($data), ENT_QUOTES);
 }
 
 // Verfificacion existente del ISBN
-function isbnExist(string $isbn, array $libros): bool {
-    foreach ($libros as $libro) {
-        if ($libro['isbn'] === $isbn) {
+function isbnExist(string $isbn, array $books): bool
+{
+    foreach ($books as $book) {
+        if ($book['isbn'] === $isbn) {
             return true;
         }
     }
@@ -30,156 +33,160 @@ function isbnExist(string $isbn, array $libros): bool {
 }
 
 // Stock
-function stockLibros(): array {
+function bookStock(): array
+{
     return [
         [
-        'isbn' => '1234567890',
-        'titulo' => 'El Principito',
-        'autor' => 'Antoine de Saint-Exupéry',
-        'paginas' => 100,
-        'cantidad' => 10,
-        'anho' => 2024,
-        'genero' => 'Fantasia',
-        'stock' => 10,
+            'isbn' => '1234567890',
+            'title' => 'El Principito',
+            'autor' => 'Antoine de Saint-Exupéry',
+            'pages' => 100,
+            'amount' => 10,
+            'year' => 2024,
+            'genre' => 'Fantasia',
+            'stock' => 10,
+            'available' => true
         ],
         [
-        'isbn' => '9788466331869',
-        'titulo' => '1984',
-        'autor' => 'George Orwell',
-        'paginas' => 328,
-        'cantidad' => 15,
-        'anho' => 2021,
-        'genero' => 'Sci-Fi',
-        'stock' => 15,
+            'isbn' => '9788466331869',
+            'title' => '1984',
+            'autor' => 'George Orwell',
+            'pages' => 328,
+            'amount' => 15,
+            'year' => 2021,
+            'genre' => 'Sci-Fi',
+            'stock' => 15,
+            'available' => true
         ],
         [
-        'isbn' => '9788439733478',
-        'titulo' => 'Cien años de soledad',
-        'autor' => 'Gabriel García Márquez',
-        'paginas' => 496,
-        'cantidad' => 8,
-        'anho' => 2019,
-        'genero' => 'Realismo Magico',
-        'stock' => 8,
+            'isbn' => '9788439733478',
+            'title' => 'Cien años de soledad',
+            'autor' => 'Gabriel García Márquez',
+            'pages' => 496,
+            'amount' => 8,
+            'year' => 2019,
+            'genre' => 'Realismo Magico',
+            'stock' => 8,
+            'available' => true
         ],
     ];
 }
 
 // Stats para cada libro
-function stats(array $libros): array {
-    $total = count($libros);
-    $disponibles = 0;
-    $noDisponibles = 0;
-    $totalPaginas = 0;
-    $inventario = 0;
-    $anhoMin = 0;
-    $anhoMax = 0;
-    $libroMasAntiguo = 0;
-    $nuevo = 0;
-    $generos = [];
+function stats(array $books): array
+{
+    $total = count($books);
+    $availables = 0;
+    $notAvailables = 0;
+    $totalInventory = 0;
+    $minYear = null;
+    $maxYear = null;
+    $oldestBook = 0;
+    $newestBook = 0;
+    $genres = [];
 
     if ($total === 0) {
         return [
             'total' => 0,
-            'disponibles' => 0,
-            'noDisponibles' => 0,
-            'totalPaginas' => 0,
-            'promedioPaginas' => 0,
-            'inventarioTotal' => 0,
-            'libroMasAntiguo' => 'N/A',
-            'libroMasNuevo' => 'N/A',
-            'anhoMin' => 'N/A',
-            'anhoMax' => 'N/A',
-            'generoPopular' => 'N/A',
-            'generos' => []
+            'availables' => 0,
+            'notAvailable' => 0,
+            'totalInventory' => 0,
+            'oldestBook' => 'N/A',
+            'newestBook' => 'N/A',
+            'minYear' => 'N/A',
+            'maxYear' => 'N/A',
+            'popularGenre' => 'N/A',
+            'genres' => []
         ];
     }
 
-    foreach ($libros as $libro) {
-        $libro['disponible'] ? $disponibles++ : $noDisponibles++;
+    foreach ($books as $book) {
+        $book['available'] ? $availables++ : $notAvailables++;
 
-        // Total de paginas/inventario
-        $totalPaginas += $libro['paginas'];
-        $inventarioTotal += $libro['stock'];
-        
-        // Libro mas antiguo
-        if ($anhoMin === null || $libro['anho'] < $anhoMin) {
-            $anhoMin = $libro['anho'];
-            $libroMasAntiguo = $libro['titulo'];
+        // Total en el inventario
+        $totalInventory += $book['stock'];
+
+        // book$book mas antiguo
+        if ($minYear === null || $book['year'] < $minYear) {
+            $minYear = $book['year'];
+            $oldestBook = $book['title'];
         }
-    
-        // Libro mas nuevo
-        if ($anhoMax === null || $libro['anho'] > $anhoMax) {
-            $anhoMax = $libro['anho'];
-            $libroMasNuevo = $libro['titulo'];
+
+        // book$book mas nuevo
+        if ($maxYear === null || $book['year'] > $maxYear) {
+            $maxYear = $book['year'];
+            $newestBook = $book['title'];
         }
-        
+
         // Contar generos
-        if (!isset($generos[$libro['genero']])) {
-            $generos[$libro['genero']] = 0;
+        if (!isset($genres[$book['genre']])) {
+            $genres[$book['genre']] = 0;
         }
-        $generos[$libro['genero']]++;
+        $genres[$book['genre']]++;
     }
 
     // Genero popular
-    $generoPopular = 'N/A';
+    $popularGenre = 'N/A';
     $maxCount = 0;
-    foreach ($generos as $genre => $count) {
+    foreach ($genres as $genre => $count) {
         if ($count > $maxCount) {
             $maxCount = $count;
-            $generoPopular = $genre;
+            $popularGenre = $genre;
         }
     }
-    
+
     return [
         'total' => $total,
-        'disponibles' => $disponibles,
-        'noDisponibles' => $noDisponibles,
-        'totalPaginas' => $totalPaginas,
-        'inventarioTotal' => $inventario,
-        'libroMasAntiguo' => $libroMasAntiguo,
-        'libroMasNuevo' => $libroMasNuevo,
-        'anhoMin' => $anhoMin,
-        'anhoMax' => $anhoMax,
-        'generoPopular' => $generoPopular,
-        'generos' => $generos
+        'availables' => $availables,
+        'notAvailables' => $notAvailables,
+        'totalInventory' => $totalInventory,
+        'oldestBook' => $oldestBook,
+        'newestBook' => $newestBook,
+        'minYear' => $minYear,
+        'maxYear' => $maxYear,
+        'popularGenre' => $popularGenre,
+        'genres' => $genres
     ];
 }
 
 // Filtrado de busqueda
-function buscarLibros(
-    array $libros,
-    string $titulo ='',
-    string $genero = '',
-    string $disponibilidad = 'Todos'
+function bookFinder(
+    array $books,
+    string $title = '',
+    string $genre = '',
+    string $availability = 'all'
 ): array {
-    $resultados = [];
-    
-    foreach ($libros as $libro) {
+    $results = [];
+
+    foreach ($books as $book) {
         $coincide = true;
 
         // Filtrado por titulo
-        if (!empty(trim($titulo))) {
-            if (stripos($libro['titulo'], trim($titulo)) == false) {
+        if (!empty(trim($title))) {
+            if (stripos($book['title'], trim($title)) == false) {
                 $coincide = false;
             }
         }
-        
+
         // Filtrado por genero
-        if (!empty($genero) && $genero !== 'todos') {
-            if ($libro['genero'] !== $genero) {
+        if (!empty($genre) && $genre !== 'all') {
+            if ($book['genre'] !== $genre) {
                 $coincide = false;
             }
         }
 
         // Filtrado por disponibilidad
-        switch ($disponibilidad) {
-            case 'disponibles':
-                if (!$libro['disponible']) { $coincide = false; }
+        switch ($availability) {
+            case 'availables':
+                if (!$book['available']) {
+                    $coincide = false;
+                }
                 break;
 
-            case 'noDisponibles':
-                if ($libro['disponible']) { $coincide = false; }
+            case 'notAvailables':
+                if ($book['available']) {
+                    $coincide = false;
+                }
                 break;
 
             default:
@@ -187,10 +194,9 @@ function buscarLibros(
         }
 
         if ($coincide) {
-            array_push($resultados, $libro);
+            array_push($results, $book);
         }
     }
-    
-    return $resultados;
-} 
-?>
+
+    return $results;
+}
