@@ -1,13 +1,35 @@
 <?php
 // Constantes de validacion
 define('MAX_ISBN',    13);
-define('MIN_TILE',   5);
 define('MIN_AUTOR',    3);
 define('MIN_PAGES',  1);
 define('MAX_PAGES', 5000);
 define('MIN_AMOUNT', 1);
 define('MIN_YEAR',  1900);
-define('MAX_YEAR',  2024);
+define('MAX_YEAR',  (int)date('Y'));
+
+function iniciarSesionApp(): void
+{
+    $duration = 604800;
+    ini_set('session.gc_maxlifetime', (string)$duration);
+    session_set_cookie_params([
+        'lifetime' => $duration,
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+}
+
+function inicializarLibros(): void
+{
+    if (!isset($_SESSION['books']) || !is_array($_SESSION['books'])) {
+        $_SESSION['books'] = bookStock();
+    }
+}
 
 // Generos
 function getGenres(): array
@@ -163,7 +185,7 @@ function bookFinder(
 
         // Filtrado por titulo
         if (!empty(trim($title))) {
-            if (stripos($book['title'], trim($title)) == false) {
+            if (stripos($book['title'], trim($title)) === false) {
                 $coincide = false;
             }
         }

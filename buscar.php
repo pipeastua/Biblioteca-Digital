@@ -1,26 +1,13 @@
 <?php
 
+include 'includes/funciones.php';
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-
-$duration = 604800;
-ini_set('session.gc_maxlifetime', $duration);
-session_set_cookie_params([
-    'lifetime' => $duration,
-    'path' => '/',
-    'domain' => $_SERVER['HTTP_HOST'],
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-
-session_start();
-include 'includes/funciones.php';
-
-if (!isset($_SESSION['books'])) {
-    $_SESSION['books'] = bookStock();
-}
+iniciarSesionApp();
+inicializarLibros();
 
 $genres = getGenres();
 $books = $_SESSION['books'];
@@ -32,7 +19,7 @@ $avaiFilter = 'all';
 $searchin = false;
 $results = [];
 
-if (isset($_GET['find'])) {
+if (isset($_GET['search'])) {
     $searchin = true;
 
     $titleSearch = sanitizar($_GET['title'] ?? '');
@@ -84,7 +71,12 @@ $totalLibrary = count($books);
             <span class="badge"><?= $totalLibrary ?> en el catálogo</span>
         </div>
 
-        <form method="GET" action="buscar.php">
+        <div class="action-bar">
+            <a href="javascript:history.back()" class="btn btn-secondary">Regresar</a>
+            <a href="index.php" class="btn btn-secondary">Ver catalogo</a>
+        </div>
+
+        <form method="GET" action="buscar.php" class="filter-form">
             <!-- Opción 1 -->
             <div class="search-card">
                 <h3>Opción 1 - Filtrar por título </h3>
@@ -123,7 +115,7 @@ $totalLibrary = count($books);
                         'availables' => 'Disponibles',
                         'notAvailables' => 'No disponibles'
                     ];
-                    $selAvai = sanitizar($_GET['availability'] ?? 'todos');
+                    $selAvai = sanitizar($_GET['availability'] ?? 'all');
                     foreach ($radioOptions as $val => $d):
                         $checked = ($selAvai === $val) ? 'checked' : '';
                     ?>
@@ -163,7 +155,7 @@ $totalLibrary = count($books);
             <div class="results-header">
                 <span>Resultados</span>
                 <span class="results-count">
-                    <?= $totalResults ?> book <?= $totalResults !== 1 ? 'y' : '' ?> found <?= $totalResults !== 1 ? 'y' : '' ?>
+                    <?= $totalResults ?> libro <?= $totalResults !== 1 ? 's' : '' ?> encontrado <?= $totalResults !== 1 ? 's' : '' ?>
                 </span>
             </div>
 
@@ -199,7 +191,7 @@ $totalLibrary = count($books);
                                     <td data-label="Estado">
                                         <span class="badge <?= $statusClass ?>"><?= $statusTxt ?></span>
                                     </td>
-                                    <td data-label="Stock"><?= (int)$book['stock'] ?>-</td>
+                                    <td data-label="Stock"><?= (int)$book['stock'] ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

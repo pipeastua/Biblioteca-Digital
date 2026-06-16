@@ -1,30 +1,19 @@
 <?php
 
+include 'includes/funciones.php';
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-
-$duration = 604800;
-ini_set('session.gc_maxlifetime', $duration);
-session_set_cookie_params([
-    'lifetime' => $duration,
-    'path' => '/',
-    'domain' => $_SERVER['HTTP_HOST'],
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-
-session_start();
-include 'includes/funciones.php';
-
-if (!isset($_SESSION['books'])) {
-    $_SESSION['books'] = bookStock();
-}
+iniciarSesionApp();
+inicializarLibros();
 
 $changedMsg = '';
+$successMsg = $_SESSION['successMsg'] ?? '';
+unset($_SESSION['successMsg']);
 
-if (isset($_GET['accion'], $_GET['isbn']) && $_GET['accion'] === 'changeDispo' && !empty($_GET['isbn'])) {
+if (isset($_GET['accion'], $_GET['isbn']) && $_GET['accion'] === 'changeAvai' && !empty($_GET['isbn'])) {
 
     $isbnPointed = sanitizar($_GET['isbn']);
     $found = false;
@@ -105,6 +94,12 @@ $total  = count($books);
             </div>
         <?php endif; ?>
 
+        <?php if (!empty($successMsg)): ?>
+            <div class="alert alert-success">
+                <strong><?= sanitizar($successMsg) ?></strong>
+            </div>
+        <?php endif; ?>
+
         <div class="stats-bar">
             <div class="stat-item">
                 <span class="stat-num"><?= $stats['total'] ?></span>
@@ -125,7 +120,7 @@ $total  = count($books);
         </div>
 
         <!--Quick access-->
-        <div>
+        <div class="action-bar">
             <a href="registrar.php" class="btn btn-primary">Agregar</a>
             <a href="buscar.php" class="btn btn-secondary">Buscar</a>
             <a href="estadisticas.php" class="btn btn-secondary">Estadisticas</a>
@@ -143,6 +138,7 @@ $total  = count($books);
                             <th>Género</th>
                             <th>Año</th>
                             <th>Páginas</th>
+                            <th>Estado</th>
                             <th>Stock</th>
                             <th>Acción</th>
                         </tr>
@@ -173,7 +169,7 @@ $total  = count($books);
                                 </td>
                                 <td data-label="Cantidad"><?= (int)$book['stock'] ?></td>
                                 <td data-label="Accion">
-                                    <a href="index.php?accion=changeDispo&amp;isbn=<?= urldecode($book['isbn']) ?>"
+                                    <a href="index.php?accion=changeAvai&amp;isbn=<?= urlencode($book['isbn']) ?>"
                                         class="btn btn-toggle"
                                         onclick="return confirm ('Desea cambiar la disponibilidad de este libro?')">
                                         <lord-icon
@@ -188,11 +184,6 @@ $total  = count($books);
                     </tbody>
                 </table>
             </div>
-            <?php
-            echo '<pre style="display:none;">';
-            print_r($_SESSION['books']);
-            echo '</pre>';
-            ?>
 
         <?php else: ?>
             <div class="empty-state">

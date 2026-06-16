@@ -1,26 +1,13 @@
 <?php
 
+include 'includes/funciones.php';
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-
-$duration = 604800;
-ini_set('session.gc_maxlifetime', $duration);
-session_set_cookie_params([
-    'lifetime' => $duration,
-    'path' => '/',
-    'domain' => $_SERVER['HTTP_HOST'],
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-
-session_start();
-include 'includes/funciones.php';
-
-if (!isset($_SESSION['books'])) {
-    $_SESSION['books'] = bookStock();
-}
+iniciarSesionApp();
+inicializarLibros();
 
 $books = $_SESSION['books'];
 $stats = stats($books);
@@ -56,6 +43,11 @@ $stats = stats($books);
         <div class="page-title">
             <h2>Estadísticas</h2>
             <span class="badge"><?= $stats['total'] ?> Libros en total </span>
+        </div>
+
+        <div class="action-bar">
+            <a href="javascript:history.back()" class="btn btn-secondary">Regresar</a>
+            <a href="index.php" class="btn btn-secondary">Ver catalogo</a>
         </div>
 
         <?php if ($stats['total'] === 0): ?>
@@ -132,78 +124,78 @@ $stats = stats($books);
                     <span class="stat-value"><?= sanitizar((string)$stats['popularGenre']) ?></span>
                     <span class="stat-desc">es el género favorito!</span>
                 </div>
+            </div>
+        <?php endif; ?>
+
+        <!-- Libros por antigueadad -->
+        <div class="form-card">
+            <h3>Libro más antiguo</h3>
+            <?php if ($stats['oldestBook'] !== 'N/A' && $stats['oldestBook'] !== null): ?>
+                <p><?= sanitizar($stats['oldestBook']) ?></p>
+                <p>Publicado en <strong><?= $stats['minYear'] ?></strong></p>
+            <?php else: ?>
+                <p>N/A</p>
             <?php endif; ?>
-            </div>
+        </div>
 
-            <!-- Libros por antigueadad -->
-            <div class="form-card">
-                <h3>Libro más antiguo</h3>
-                <?php if ($stats['oldestBook'] !== 'N/A' && $stats['oldestBook'] !== null): ?>
-                    <p><?= sanitizar($stats['oldestBook']) ?></p>
-                    <p>Publicado en <strong><?= $stats['minYear'] ?></strong></p>
-                <?php else: ?>
-                    <p>N/A</p>
-                <?php endif; ?>
-            </div>
+        <div class="form-card">
+            <h3>Libro más reciente</h3>
+            <?php if ($stats['newestBook'] !== 'N/A' && $stats['newestBook'] !== null): ?>
+                <p><?= sanitizar($stats['newestBook']) ?></p>
+                <p>Publicado en <strong><?= $stats['maxYear'] ?></strong></p>
+            <?php else: ?>
+                <p>N/A</p>
+            <?php endif; ?>
+        </div>
 
-            <div class="form-card">
-                <h3>Libro más reciente</h3>
-                <?php if ($stats['newestBook'] !== 'N/A' && $stats['newestBook'] !== null): ?>
-                    <p><?= sanitizar($stats['newestBook']) ?></p>
-                    <p>Publicado en <strong><?= $stats['maxYear'] ?></strong></p>
-                <?php else: ?>
-                    <p>N/A</p>
-                <?php endif; ?>
-            </div>
-
-            <div class="form-card">
-                <h3>Géneros</h3>
-                <?php if (!empty($stats['genres'])): ?>
-                    <table class="genre-table">
-                        <thead>
+        <div class="form-card">
+            <h3>Géneros</h3>
+            <?php if (!empty($stats['genres'])): ?>
+                <table class="genre-table">
+                    <thead>
+                        <tr>
+                            <th>Género</th>
+                            <th>Cantidad de libros</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        foreach ($stats['genres'] as $genre => $amount):
+                        ?>
                             <tr>
-                                <th>Género</th>
-                                <th>Cantidad de libros</th>
+                                <td>
+                                    <span class="badge-genre"><?= sanitizar($genre) ?></span>
+                                </td>
+                                <td><strong><?= $amount ?></strong></td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            foreach ($stats['genres'] as $genre => $amount):
-                            ?>
-                                <tr>
-                                    <td>
-                                        <span class="badge-genre"><?= sanitizar($genre) ?></span>
-                                    </td>
-                                    <td><strong><?= $amount ?></strong></td>
-                                </tr>
-                            <?php endforeach ?>
-                        </tbody>
-                    </table>
-                <?php else: ?>
-                    <p>Sin datos de géneros.</p>
-                <?php endif; ?>
-            </div>
+                        <?php endforeach ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p>Sin datos de géneros.</p>
+            <?php endif; ?>
+        </div>
 
-            <div class="form-card">
-                <h3>Resumen</h3>
-                <?php
-                $summary = [
-                    "Total de libros: <strong>{$stats['total']}</strong>",
-                    "Libros disponibles: <strong>{$stats['availables']}</strong>",
-                    "Libros no disponibles: <strong>{$stats['notAvailables']}</strong>",
-                    "Libro más antiguo: <strong>" . sanitizar((string)$stats['oldestBook']) . "</strong>",
-                    "Libro más reciente: <strong>" . sanitizar((string)$stats['newestBook']) . "</strong>",
-                    "Género favorito: <strong>" . sanitizar((string)$stats['popularGenre']) . "</strong>",
-                    "Stock general: <strong>{$stats['totalInventory']}</strong>",
-                ];
+        <div class="form-card">
+            <h3>Resumen</h3>
+            <?php
+            $summary = [
+                "Total de libros: <strong>{$stats['total']}</strong>",
+                "Libros disponibles: <strong>{$stats['availables']}</strong>",
+                "Libros no disponibles: <strong>{$stats['notAvailables']}</strong>",
+                "Libro más antiguo: <strong>" . sanitizar((string)$stats['oldestBook']) . "</strong>",
+                "Libro más reciente: <strong>" . sanitizar((string)$stats['newestBook']) . "</strong>",
+                "Género favorito: <strong>" . sanitizar((string)$stats['popularGenre']) . "</strong>",
+                "Stock general: <strong>{$stats['totalInventory']}</strong>",
+            ];
 
-                $i = 0;
-                while ($i < count($summary)) {
-                    echo "<p>" . ($i + 1) . "." . $summary[$i] . "</p>";
-                    $i++;
-                }
-                ?>
-            </div>
+            $i = 0;
+            while ($i < count($summary)) {
+                echo "<p>" . ($i + 1) . "." . $summary[$i] . "</p>";
+                $i++;
+            }
+            ?>
+        </div>
     </main>
 
     <footer class="footer">
